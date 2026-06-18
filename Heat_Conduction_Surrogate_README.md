@@ -70,5 +70,6 @@ pip install -r libraries.txt
 the full-field temperature, range, min/max, as well as uniformity
 -In addition to .VTP, the "Output.msg" contains the comparison of True and Predicted temperatures [First ten], as well as 
 MAE (Mean Absolute Error) and RMSE (Root Mean Square Error), and temperature Uniformities (|∇T|) with their corresponding errors.  
+-The trained, inference-ready model is saved as "Heat_Conduction_Surrogate.pth". 
 
 

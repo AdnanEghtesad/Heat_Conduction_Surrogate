@@ -437,8 +437,20 @@ if __name__ == "__main__":
     model = DeepONet(w=Num_Neurons)
 
     loss_hist, rel_hist = train(model, loader, device=device, epochs=Num_Epochs, lr=LearningRate)
+    # =====================================================
+    # SAVE TRAINED MODEL
+    # =====================================================
+    model_path = os.path.join(os.path.dirname(__file__), "Heat_Conduction_Surrogate.pth")
 
-   
+    torch.save({
+     "model_state_dict": model.state_dict(),
+        "Num_Neurons": Num_Neurons,
+        "LearningRate": LearningRate,
+        "Num_Epochs": Num_Epochs
+    }, model_path)
+
+    print("\nModel saved to:", model_path)
+    
     predict_all(model, dataset, device)
 
     # =====================================================
