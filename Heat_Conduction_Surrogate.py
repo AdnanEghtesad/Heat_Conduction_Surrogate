@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 # =========================================================
 Num_Neurons =128
 LearningRate = 1e-3
-Num_Epochs = 2
+Num_Epochs = 150
 # =========================================================
-# DEVICE
+# Run on GPU if present  
 # =========================================================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device:", device)
@@ -44,7 +44,6 @@ def extract_temperature(mesh):
         return np.asarray(mesh.point_data[list(keys)[0]], dtype=np.float32)
 
     raise KeyError(f"No temperature field found: {list(keys)}")
-
 
 # =========================================================
 # Six (6) PARAMS LOADER
@@ -75,7 +74,6 @@ def load_params(json_path):
 def load_mesh_coords(mesh_path):
     mesh = meshio.read(mesh_path)
     return mesh.points[:, :2].astype(np.float32)
-
 
 # =========================================================
 # DATASET
@@ -126,7 +124,6 @@ class HeatDataset(Dataset):
             torch.tensor(params, dtype=torch.float32),
             torch.tensor(T, dtype=torch.float32),
         )
-
 
 # =========================================================
 # MODEL
@@ -179,7 +176,7 @@ def train(model, loader, device, epochs=5, lr=1e-3, max_points=4096):
     model.to(device)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
-
+    #loss_fn = nn.SmoothL1Loss(beta=0.1)
     loss_hist = []
     rel_hist = []
 
@@ -270,7 +267,6 @@ def train(model, loader, device, epochs=5, lr=1e-3, max_points=4096):
 
     return loss_hist, rel_hist
 
-
 # =========================================================
 # EVALUATION
 # =========================================================
@@ -335,7 +331,7 @@ def predict_all(model, dataset, device):
             mesh.point_data["T_pred"] = T_pred
             mesh.point_data["error"] = error
 
-                # ----- Temperature gradient (uniformity) -----
+            # ----- Temperature gradient (uniformity) -----
 
             # True temperature gradient
             grad_true = mesh.compute_derivative(
