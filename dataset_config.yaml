@@ -1,0 +1,17 @@
+# Config for generate_dataset.py
+
+num_samples: 100
+seed: 0
+output_dir: samples
+
+# Uniform sampling ranges for each parameter.
+ranges:
+  length:  [2.0, 5.0]    # x-extent [m]
+  breadth: [2.0, 5.0]    # y-extent [m]
+  radius:  [0.5, 1.0]    # hole radius [m]
+  q:       [50.0, 150.0] # uniform volumetric heat source [W/m^3]
+  T_left:  [300.0, 350.0]# Dirichlet temperature on the left edge [K]
+  T_right: [400.0, 450.0]# Dirichlet temperature on the right edge [K]
+
+conductivity: 1.0          # k [W/(m.K)], fixed across the dataset
+element_fraction: 0.05     # triangle edge length as a fraction of min(length, breadth)

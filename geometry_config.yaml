@@ -1,0 +1,26 @@
+# Config for geometry_generator.py
+#
+# The rectangle is centred at the origin and spans:
+#     x in [-length/2, +length/2]
+#     y in [-breadth/2, +breadth/2]
+# with a circular hole of `radius` centred at (0, 0).
+
+geometry:
+  length: 2.0       # x-extent  [m]
+  breadth: 1.0      # y-extent  [m]
+  radius: 0.3       # hole radius [m]
+
+# Allowed parameter ranges. Generation fails if a value falls outside [min, max].
+bounds:
+  length:  [0.5, 4.0]
+  breadth: [0.5, 4.0]
+  radius:  [0.05, 1.5]
+
+mesh:
+  # Target triangle edge length as a fraction of min(length, breadth).
+  # element_size = element_fraction * min(length, breadth), so mesh density
+  # (node count) stays roughly constant regardless of geometry size.
+  element_fraction: 0.05
+
+output:
+  path: outputs/geometry.msh

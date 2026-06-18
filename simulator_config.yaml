@@ -1,0 +1,18 @@
+# Config for simulator.py
+#
+# Solves  -k * laplacian(T) = q  on the rectangle-with-hole mesh, with:
+#   left edge  -> Dirichlet T = T_left   (T1)
+#   right edge -> Dirichlet T = T_right  (T2)
+#   top, bottom, hole -> insulated (zero-flux)
+
+input:
+  mesh: outputs/geometry.msh
+
+physics:
+  conductivity: 1.0     # k  [W/(m.K)] -- fixed across the dataset
+  source: 100.0         # q  [W/m^3]   -- uniform volumetric heat source
+  T_left: 300.0         # T1 [K]       -- Dirichlet on the left edge
+  T_right: 350.0        # T2 [K]       -- Dirichlet on the right edge
+
+output:
+  path: outputs/solution.vtp
