@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 # Parameters for DeepONet Training and HyperParameter Tuning  
 # =========================================================
 Num_Neurons =128
-LearningRate = 5e-3
-Num_Epochs = 100
+LearningRate = 1e-3
+Num_Epochs = 500
 # =========================================================
 # DEVICE
 # =========================================================
