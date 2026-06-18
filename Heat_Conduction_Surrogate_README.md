@@ -35,8 +35,10 @@ json file: Design parameters
 -Note that each sample used a different geometry, undelrying mesh and boundary conditions
 
 #Model
--The model uses a DeepONet Architecture.
--The model is implemented in PyTorch and trained using the Adam optimizer. 
+-The model uses a DeepONet Architecture
+-The model is implemented in PyTorch
+-The model can take the advantage of GPU
+-GPU will be automaically selected if the machine/workstation has NVIDIA Graphics Card with the drivers installed 
 -Live training visualization is implemented using Matplotlib.
 -Evaluation metrics include:
 Mean Absolute Error (MAE)
@@ -65,4 +67,7 @@ pip install -r libraries.txt
 -The .vtp files can be visualized in opensource visualization toolkit, Paraview (https://www.paraview.org/)
 -The ground truth temperature field ("solution.vtp") and ("prediction.vtp") could be both loaded into paraview to compare
 the full-field temperature, range, min/max, as well as uniformity
+-In addition to .VTP, the "Output.msg" contains the comparison of True and Predicted temperatures [First ten], as well as 
+MAE (Mean Absolute Error) and RMSE (Root Mean Square Error) 
+
 

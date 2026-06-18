@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # =========================================================
 Num_Neurons =128
 LearningRate = 1e-3
-Num_Epochs = 500
+Num_Epochs = 2
 # =========================================================
 # DEVICE
 # =========================================================
@@ -279,50 +279,69 @@ def predict_all(model, dataset, device):
     model.eval()
     model.to(device)
 
-    print("\n========== EVALUATION ==========\n")
+    # Create log file in the same folder as this script
+    log_path = os.path.join(os.path.dirname(__file__), "Output.msg")
 
-    for i, path in enumerate(dataset.samples):
+    with open(log_path, "w") as log:
 
-        msh = [f for f in os.listdir(path) if f.endswith(".msh")][0]
-        vtp = [f for f in os.listdir(path) if f.endswith(".vtp")][0]
-        jsn = [f for f in os.listdir(path) if f.endswith(".json")][0]
+        def log_print(*args):
+            text = " ".join(str(a) for a in args)
+            print(text)
+            log.write(text + "\n")
 
-        coords = load_mesh_coords(os.path.join(path, msh))
-        params = load_params(os.path.join(path, jsn))
+        log_print("\n========== EVALUATION ==========\n")
 
-        mesh = pv.read(os.path.join(path, vtp))
-        T_true = extract_temperature(mesh)
+        for i, path in enumerate(dataset.samples):
 
-        coords_t = torch.tensor(coords, dtype=torch.float32).unsqueeze(0).to(device)
-        params_t = torch.tensor(params, dtype=torch.float32).unsqueeze(0).to(device)
+            msh = [f for f in os.listdir(path) if f.endswith(".msh")][0]
+            vtp = [f for f in os.listdir(path) if f.endswith(".vtp")][0]
+            jsn = [f for f in os.listdir(path) if f.endswith(".json")][0]
 
-        with torch.no_grad():
-            T_pred = model(coords_t, params_t).cpu().numpy().squeeze()
+            coords = load_mesh_coords(os.path.join(path, msh))
+            params = load_params(os.path.join(path, jsn))
 
-        T_true = T_true.astype(np.float32)
-        T_pred = T_pred.astype(np.float32)
+            mesh = pv.read(os.path.join(path, vtp))
+            T_true = extract_temperature(mesh)
 
-        error = T_pred - T_true
+            coords_t = torch.tensor(coords, dtype=torch.float32).unsqueeze(0).to(device)
+            params_t = torch.tensor(params, dtype=torch.float32).unsqueeze(0).to(device)
 
-        print(f"\nSample {i+1}")
-        print("T_true[:10]:", T_true[:10])
-        print("T_pred[:10]:", T_pred[:10])
+            with torch.no_grad():
+                T_pred = model(coords_t, params_t).cpu().numpy().squeeze()
 
-        print("\n--- Stats ---")
-        print(f"Min/Max True: {T_true.min():.4f}/{T_true.max():.4f}")
-        print(f"Min/Max Pred: {T_pred.min():.4f}/{T_pred.max():.4f}")
-        print(f"MAE: {np.mean(np.abs(error)):.6e}")
-        print(f"RMSE: {np.sqrt(np.mean(error**2)):.6e}")
+            T_true = T_true.astype(np.float32)
+            T_pred = T_pred.astype(np.float32)
 
-        mesh.point_data["T_true"] = T_true
-        mesh.point_data["T_pred"] = T_pred
-        mesh.point_data["error"] = error
+            error = T_pred - T_true
 
-        out_path = os.path.join(path, "prediction.vtp")
-        mesh.save(out_path)
+            log_print(f"\n{'='*70}")
+            log_print(f"Sample {i+1}")
+            log_print(f"Folder : {os.path.basename(path)}")
+            log_print(f"{'='*70}")
 
-        print("Saved:", out_path)
+            log_print("\nFirst 10 temperatures")
+            log_print("T_true[:10] =", T_true[:10])
+            log_print("T_pred[:10] =", T_pred[:10])
 
+            log_print("\nStatistics")
+            log_print(f"Min True : {T_true.min():.6f}")
+            log_print(f"Max True : {T_true.max():.6f}")
+            log_print(f"Min Pred : {T_pred.min():.6f}")
+            log_print(f"Max Pred : {T_pred.max():.6f}")
+            log_print(f"MAE      : {np.mean(np.abs(error)):.6e}")
+            log_print(f"RMSE     : {np.sqrt(np.mean(error**2)):.6e}")
+
+            mesh.point_data["T_true"] = T_true
+            mesh.point_data["T_pred"] = T_pred
+            mesh.point_data["error"] = error
+
+            out_path = os.path.join(path, "prediction.vtp")
+            mesh.save(out_path)
+
+            log_print("Saved:", out_path)
+
+        log_print("\nEvaluation complete.")
+        log_print("Log written to:", log_path)
 
 # =========================================================
 # INFERENCE  
@@ -376,18 +395,7 @@ if __name__ == "__main__":
 
     loss_hist, rel_hist = train(model, loader, device=device, epochs=Num_Epochs, lr=LearningRate)
 
-    plt.figure()
-    plt.plot(rel_hist)
-    plt.title("Rel L2 vs Epochs")
-    plt.grid()
-    #plt.show()
-
-    plt.figure()
-    plt.plot(loss_hist)
-    plt.title("Loss vs Epochs")
-    plt.grid()
-    #plt.show()
-
+   
     predict_all(model, dataset, device)
 
     # =====================================================
