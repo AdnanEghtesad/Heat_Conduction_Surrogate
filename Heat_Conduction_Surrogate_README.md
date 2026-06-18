@@ -1,4 +1,5 @@
 #Surrogate + Inference Package for a Heat-Transfer Problem
+Github Repo: https://github.com/AdnanEghtesad/Heat_Conduction_Surrogate.git
 
 ## The physics problem
 We consider the steady-state heat conduction equation:
