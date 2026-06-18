@@ -389,31 +389,77 @@ def predict_all(model, dataset, device):
 # =========================================================
 # INFERENCE  
 # =========================================================
-def infer_from_sample_folder(model, folder_path, device, out_name="inference_new_case.vtp"):
+def infer_from_sample_folder(model, folder_path, device,
+                              out_name="inference_new_case.vtp"):
 
     model.eval()
     model.to(device)
 
+    # =====================================================
+    # FILES
+    # =====================================================
     msh_file = [f for f in os.listdir(folder_path) if f.endswith(".msh")][0]
-    msh_path = os.path.join(folder_path, msh_file)
+    json_file = [f for f in os.listdir(folder_path) if f.endswith(".json")][0]
 
+    msh_path = os.path.join(folder_path, msh_file)
+    json_path = os.path.join(folder_path, json_file)
+
+    # (optional ground truth file)
+    vtp_file = None
+    if any(f.endswith("solution.vtp") for f in os.listdir(folder_path)):
+        vtp_file = [f for f in os.listdir(folder_path) if f.endswith("solution.vtp")][0]
+        vtp_path = os.path.join(folder_path, vtp_file)
+
+    # =====================================================
+    # GEOMETRY
+    # =====================================================
     mesh = meshio.read(msh_path)
     coords = mesh.points[:, :2].astype(np.float32)
 
     coords_t = torch.tensor(coords, dtype=torch.float32).unsqueeze(0).to(device)
 
-    params = np.array([1.2, 0.8, 0.15, 5e5, 300.0, 350.0], dtype=np.float32)
+    # =====================================================
+    # PARAMETERS (FIXED: now read from JSON)
+    # =====================================================
+    params = load_params(json_path)
     params_t = torch.tensor(params, dtype=torch.float32).unsqueeze(0).to(device)
 
+    # =====================================================
+    # MODEL PREDICTION
+    # =====================================================
     with torch.no_grad():
         T_pred = model(coords_t, params_t).cpu().numpy().squeeze()
 
-    # convert to PyVista
+    # =====================================================
+    # PYVISTA OUTPUT MESH
+    # =====================================================
     mesh_vtk = pv.read(msh_path)
     mesh_vtk.point_data["T_pred"] = T_pred
     mesh_vtk.set_active_scalars("T_pred")
 
-    # Convert to surface so .vtp is valid
+    # =====================================================
+    # OPTIONAL: COMPARE WITH GROUND TRUTH
+    # =====================================================
+    if vtp_file is not None:
+        mesh_true = pv.read(vtp_path)
+        T_true = extract_temperature(mesh_true)
+
+        error = T_pred - T_true
+
+        mesh_vtk.point_data["T_true"] = T_true
+        mesh_vtk.point_data["error"] = error
+
+        # error metrics
+        mae = np.mean(np.abs(error))
+        rmse = np.sqrt(np.mean(error ** 2))
+
+        print("\n========== INFERENCE VALIDATION ==========")
+        print("MAE :", mae)
+        print("RMSE:", rmse)
+
+    # =====================================================
+    # SAVE OUTPUT
+    # =====================================================
     mesh_vtk = mesh_vtk.extract_surface()
 
     out_path = os.path.join(folder_path, out_name)
