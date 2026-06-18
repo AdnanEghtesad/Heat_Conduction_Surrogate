@@ -282,7 +282,7 @@ def predict_all(model, dataset, device):
     # Create log file in the same folder as this script
     log_path = os.path.join(os.path.dirname(__file__), "Output.msg")
 
-    with open(log_path, "w") as log:
+    with open(log_path, "w", encoding="utf-8") as log:
 
         def log_print(*args):
             text = " ".join(str(a) for a in args)
@@ -334,6 +334,49 @@ def predict_all(model, dataset, device):
             mesh.point_data["T_true"] = T_true
             mesh.point_data["T_pred"] = T_pred
             mesh.point_data["error"] = error
+
+                # ----- Temperature gradient (uniformity) -----
+
+            # True temperature gradient
+            grad_true = mesh.compute_derivative(
+                scalars="T_true",
+                gradient=True
+            )
+            grad_true_mag = np.linalg.norm(
+                grad_true.point_data["gradient"],
+                axis=1
+            )
+
+            # Predicted temperature gradient
+            grad_pred = mesh.compute_derivative(
+                scalars="T_pred",
+                gradient=True
+            )
+            grad_pred_mag = np.linalg.norm(
+                grad_pred.point_data["gradient"],
+                axis=1
+            )
+
+            mesh.point_data["grad_true"] = grad_true_mag
+            mesh.point_data["grad_pred"] = grad_pred_mag
+            mesh.point_data["grad_error"] = grad_pred_mag - grad_true_mag
+
+            log_print("\nTemperature Uniformity (|∇T|)")
+
+            log_print(f"Mean |∇T| True : {grad_true_mag.mean():.6e}")
+            log_print(f"Mean |∇T| Pred : {grad_pred_mag.mean():.6e}")
+
+            log_print(f"Max  |∇T| True : {grad_true_mag.max():.6e}")
+            log_print(f"Max  |∇T| Pred : {grad_pred_mag.max():.6e}")
+
+            log_print(f"Std  |∇T| True : {grad_true_mag.std():.6e}")
+            log_print(f"Std  |∇T| Pred : {grad_pred_mag.std():.6e}")
+
+            uniformity_mae = np.mean(np.abs(grad_pred_mag - grad_true_mag))
+            uniformity_rmse = np.sqrt(np.mean((grad_pred_mag - grad_true_mag) ** 2))
+
+            log_print(f"Gradient MAE   : {uniformity_mae:.6e}")
+            log_print(f"Gradient RMSE  : {uniformity_rmse:.6e}")
 
             out_path = os.path.join(path, "prediction.vtp")
             mesh.save(out_path)

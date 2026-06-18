@@ -68,6 +68,6 @@ pip install -r libraries.txt
 -The ground truth temperature field ("solution.vtp") and ("prediction.vtp") could be both loaded into paraview to compare
 the full-field temperature, range, min/max, as well as uniformity
 -In addition to .VTP, the "Output.msg" contains the comparison of True and Predicted temperatures [First ten], as well as 
-MAE (Mean Absolute Error) and RMSE (Root Mean Square Error) 
+MAE (Mean Absolute Error) and RMSE (Root Mean Square Error), and temperature Uniformities (|∇T|) with their corresponding errors.  
 
 
